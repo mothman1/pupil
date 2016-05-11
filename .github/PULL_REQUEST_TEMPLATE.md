@@ -8,4 +8,5 @@ Provide a description of the changes in your pull request. Does this pull reques
 * ...
 
 :+1: :eyes: Thanks for contributing to Pupil :eyes: :+1:
+
 @pupil-labs/pupil-maintainers
