@@ -115,7 +115,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
         # Callback functions
         def on_resize(window,w, h):
-            if not g_pool.iconified:
+            if g_pool.window_visible:
                 active_window = glfw.glfwGetCurrentContext()
                 glfw.glfwMakeContextCurrent(window)
                 g_pool.gui.update_window(w,h)
@@ -130,7 +130,11 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
             g_pool.gui.update_char(char)
 
         def on_iconify(window,iconified):
-            g_pool.iconified = iconified
+            g_pool.window_visible = not bool(iconified)
+
+        def on_focus(window,focus):
+            if focus:
+                g_pool.window_visible = True
 
         def on_button(window,button, action, mods):
             if g_pool.display_mode == 'roi':
@@ -193,7 +197,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
         # any object we attach to the g_pool object *from now on* will only be visible to this process!
         # vars should be declared here to make them visible to the code reader.
-        g_pool.iconified = False
+        g_pool.window_visible = True
         g_pool.capture = cap
         g_pool.flip = session_settings.get('flip',False)
         g_pool.display_mode = session_settings.get('display_mode','camera_image')
@@ -250,8 +254,6 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         g_pool.image_tex.update_from_frame(frame)
         glfw.glfwSwapInterval(0)
 
-        sphere  = Sphere(20)
-
         #setup GUI
         g_pool.gui = ui.UI()
         g_pool.gui.scale = session_settings.get('gui_scale',1)
@@ -277,6 +279,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         # Register callbacks main_window
         glfw.glfwSetFramebufferSizeCallback(main_window,on_resize)
         glfw.glfwSetWindowIconifyCallback(main_window,on_iconify)
+        glfw.glfwSetWindowFocusCallback(main_window,on_focus)
         glfw.glfwSetKeyCallback(main_window,on_key)
         glfw.glfwSetCharCallback(main_window,on_char)
         glfw.glfwSetMouseButtonCallback(main_window,on_button)
@@ -313,17 +316,25 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         def window_should_update():
             return next(window_update_timer)
 
+        glfw.glfwHideWindow(main_window)
+        # g_pool.window_visible = False
 
         # Event loop
         while not glfw.glfwWindowShouldClose(main_window):
 
             if pipe_to_world.poll():
                 cmd = pipe_to_world.recv()
+                command = None
                 if cmd == 'Exit':
                     break
                 elif cmd == "Ping":
                     pipe_to_world.send("Pong")
-                    command = None
+                elif cmd == "Hide_Window":
+                    glfw.glfwHideWindow(main_window)
+                    g_pool.window_visible = False
+                elif cmd == "Show_Window":
+                    glfw.glfwShowWindow(main_window)
+                    g_pool.window_visible = True
                 else:
                     command,payload = cmd
                 if command == 'Set_Detection_Mapping_Mode':
@@ -395,7 +406,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
             # GL drawing
             if window_should_update():
-                if not g_pool.iconified:
+                if g_pool.window_visible:
                     glfw.glfwMakeContextCurrent(main_window)
                     clear_gl_screen()
 
