@@ -142,7 +142,6 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
             return
         launcher_pipe.send(eye_id)
         eye_pipes[eye_id].send( ('Set_Detection_Mapping_Mode',g_pool.detection_mapping_mode) )
-        eye_pipes[eye_id].send('Hide_Window')
 
         if blocking:
             #wait for ready message from eye to sequentialize startup

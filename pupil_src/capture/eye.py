@@ -316,8 +316,6 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         def window_should_update():
             return next(window_update_timer)
 
-        glfw.glfwHideWindow(main_window)
-        # g_pool.window_visible = False
 
         # Event loop
         while not glfw.glfwWindowShouldClose(main_window):
