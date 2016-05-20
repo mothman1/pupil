@@ -61,21 +61,14 @@ def main():
     #IPC
     pupil_queue = Queue()
     timebase = Value(c_double,0)
-
-    cmd_world_end,cmd_launcher_end = Pipe()
-    com0 = Pipe(True)
     eyes_are_alive = Value(c_bool,0),Value(c_bool,0)
-    com1 = Pipe(True)
-    com_world_ends = com0[0],com1[0]
-    com_eye_ends = com0[1],com1[1]
+    cmd_world_end,cmd_launcher_end = Pipe()
 
 
     p_world = Process(target=world,
                       name= 'world',
-                      args=(pupil_queue,
-                            timebase,
+                      args=(timebase,
                             cmd_world_end,
-                            com_world_ends,
                             eyes_are_alive,
                             user_dir,
                             app_version,
@@ -88,12 +81,11 @@ def main():
         if cmd == "Exit":
             break
         else:
-            eye_id = cmd
+            eye_id,pupil_port,ctr_port,log_port = cmd
             p_eye = Process(target=eye,
                             name='eye%s'%eye_id,
-                            args=(pupil_queue,
-                                timebase,
-                                com_eye_ends[eye_id],
+                            args=(timebase,
+                                pupil_port,ctr_port,log_port,
                                 eyes_are_alive[eye_id],
                                 user_dir,
                                 app_version,

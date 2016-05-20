@@ -13,7 +13,7 @@ import os, sys, platform
 class Global_Container(object):
     pass
 
-def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,version,cap_src):
+def world(timebase,launcher_pipe,eyes_are_alive,user_dir,version,cap_src):
     """world
     Creates a window, gl context.
     Grabs images from a capture.
@@ -42,12 +42,15 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     logger.addHandler(ch)
 
 
+    import zmq
+    zmq_ctx = zmq.Context()
+
+    log_port = None
     #setup thread to recv log recrods from other processes.
     def log_loop(logging):
-        import zmq
-        ctx = zmq.Context()
-        sub = ctx.socket(zmq.SUB)
-        sub.bind('tcp://127.0.0.1:502020')
+        global log_port
+        sub = zmq_ctx.socket(zmq.SUB)
+        log_port = sub.bind_to_random_port('tcp://127.0.0.1',min_port=20000)
         sub.setsockopt(zmq.SUBSCRIBE, "")
         while True:
             record = sub.recv_pyobj()
@@ -92,6 +95,26 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     logger.info('Application Version: %s'%version)
     logger.info('System Info: %s'%get_system_info())
 
+
+
+
+    pupil_queue_sub = zmq_ctx.socket(zmq.SUB)
+    pupil_queue_sub_port = sub.bind_to_random_port('tcp://127.0.0.1',min_port=25000)
+    pupil_queue_sub.setsockopt(zmq.SUBSCRIBE, "")
+
+    pupil_queue = zmq_ctx.socket(zmq.PUB)
+    pupil_queue_port = sub.bind_to_random_port('tcp://127.0.0.1',min_port=25000)
+
+    pupil_queue = zmq.threaded_device(zmq.FORWARDER, pupil_queue_sub, backend)
+
+
+
+    eye0_pipe = zmq_ctx.socket(zmq.PAIR)
+    eye0_pipe_port = sub.bind_to_random_port('tcp://127.0.0.1',min_port=25000)
+    eye1_pipe = zmq_ctx.socket(zmq.PAIR)
+    eye1_pipe_port = sub.bind_to_random_port('tcp://127.0.0.1',min_port=25000)
+    eye_pipes = (eye0_pipe,eye1_pipe)
+    eye_pipe_ports = (eye0_pipe_port,eye1_pipe_port)
 
     #g_pool holds variables for this process
     g_pool = Global_Container()
@@ -140,19 +163,19 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
         if eyes_are_alive[eye_id].value:
             logger.error("Eye%s process already running."%eye_id)
             return
-        launcher_pipe.send(eye_id)
-        eye_pipes[eye_id].send( ('Set_Detection_Mapping_Mode',g_pool.detection_mapping_mode) )
+        launcher_pipe.send(eye_id,pupil_queue_sub_port,eye_pipe_ports[eye_id],log_port)
+        eye_pipes[eye_id].send_pyobj( ('Set_Detection_Mapping_Mode',g_pool.detection_mapping_mode) )
 
         if blocking:
             #wait for ready message from eye to sequentialize startup
-            eye_pipes[eye_id].send('Ping')
-            eye_pipes[eye_id].recv()
+            eye_pipes[eye_id].send_pyobj('Ping')
+            eye_pipes[eye_id].recv_pyobj()
 
         logger.warning('Eye %s process started.'%eye_id)
 
     def stop_eye_process(eye_id,blocking=False):
         if eyes_are_alive[eye_id].value:
-            eye_pipes[eye_id].send('Exit')
+            eye_pipes[eye_id].send_pyobj('Exit')
             if blocking:
                 while eyes_are_alive[eye_id].value:
                     sleep(.1)
@@ -167,7 +190,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
             g_pool.plugins.clean()
         for alive, pipe in zip(g_pool.eyes_are_alive,g_pool.eye_pipes):
             if alive.value:
-                pipe.send( ('Set_Detection_Mapping_Mode',new_mode) )
+                pipe.send_pyobj( ('Set_Detection_Mapping_Mode',new_mode) )
 
         g_pool.detection_mapping_mode = new_mode
 
@@ -187,24 +210,6 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     ts = get_timestamp()
     # Event loop
     while True:
-
-
-        #update performace graphs
-        t = get_timestamp()
-        dt,ts = t-ts,t
-
-        #a dictionary that allows plugins to post and read events
-        events = {}
-
-        #report time between now and the last loop interation
-        events['dt'] = get_dt()
-
-        #receive and map pupil positions
-        recent_pupil_positions = []
-        while not g_pool.pupil_queue.empty():
-            p = g_pool.pupil_queue.get()
-            recent_pupil_positions.append(p)
-        events['pupil_positions'] = recent_pupil_positions
 
 
         # publish delayed notifiactions when their time has come.
