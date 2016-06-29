@@ -19,7 +19,7 @@ import audio
 
 
 from pyglui import ui
-from calibration_plugin_base import Calibration_Plugin
+from plugin import Calibration_Plugin
 
 #logging
 import logging
@@ -35,6 +35,7 @@ class Natural_Features_Calibration(Calibration_Plugin):
         self.point = None
         self.count = 0
         self.detected = False
+        self.active = False
         self.pos = None
         self.r = 40.0 # radius of circle displayed
         self.ref_list = []
@@ -66,10 +67,9 @@ class Natural_Features_Calibration(Calibration_Plugin):
 
     def toggle(self,_=None):
         if self.active:
-            self.notify_all({'subject':'calibration.should_stop'})
+            self.stop()
         else:
-            self.notify_all({'subject':'calibration.should_start'})
-
+            self.start()
 
     def start(self):
         audio.say("Starting Calibration")
@@ -84,6 +84,8 @@ class Natural_Features_Calibration(Calibration_Plugin):
         self.active = False
         self.button.status_text = ''
         finish_calibration(self.g_pool,self.pupil_list,self.ref_list)
+        # Mohammad: send a notification that calibration stopped to be caught by CRowd eye plugin
+        self.notify_all( {'subject':'cal_stopped'} )
 
 
     def update(self,frame,events):
@@ -116,7 +118,7 @@ class Natural_Features_Calibration(Calibration_Plugin):
 
             #always save pupil positions
             for p_pt in recent_pupil_positions:
-                if p_pt['confidence'] > self.pupil_confidence_threshold:
+                if p_pt['confidence'] > self.g_pool.pupil_confidence_threshold:
                     self.pupil_list.append(p_pt)
 
             if self.count:

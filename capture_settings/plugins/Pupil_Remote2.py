@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 exit_thread = "EXIT_THREAD".encode('utf_8')
 
 
-class Pupil_Remote(Plugin):
+class Pupil_Remote2(Plugin):
     """pupil remote plugin
     send simple string messages to control Pupil Capture functions:
 
@@ -53,7 +53,7 @@ class Pupil_Remote(Plugin):
     print socket.recv()
     """
     def __init__(self, g_pool,address="tcp://*:50020"):
-        super(Pupil_Remote, self).__init__(g_pool)
+        super(Pupil_Remote2, self).__init__(g_pool)
         self.order = .01 #excecute first
         self.context = zmq.Context()
         self.thread_pipe = None
@@ -162,7 +162,3 @@ class Pupil_Remote(Plugin):
         self.stop_server()
         self.deinit_gui()
         self.context.destroy()
-
-
-
-

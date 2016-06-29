@@ -10,21 +10,22 @@ pyglui_hidden_imports = ['pyglui.pyfontstash.fontstash','pyglui.cygl.shader','py
 if platform.system() == 'Darwin':
     from version import dpkg_deb_version
 
-    a = Analysis(['../../pupil_src/capture/main.py'],
-                 pathex=['../../pupil_src/shared_modules/'],
+    a = Analysis(['../pupil_src/player/main.py'],
+                 pathex=['../pupil_src/shared_modules/'],
                  hiddenimports=[]+av_hidden_imports+pyglui_hidden_imports,
                  hookspath=None,
                  runtime_hooks=None,
                  excludes=['pyx_compiler','matplotlib'])
+
     pyz = PYZ(a.pure)
     exe = EXE(pyz,
               a.scripts,
               exclude_binaries=True,
-              name='pupil_service',
+              name='pupil_player',
               debug=False,
               strip=None,
               upx=False,
-              console=True)
+              console=False)
 
     #exclude system lib.
     libSystem = [bn for bn in a.binaries if 'libSystem.dylib' in bn]
@@ -37,17 +38,16 @@ if platform.system() == 'Darwin':
                    [('Roboto-Regular.ttf','/usr/local/lib/python2.7/site-packages/pyglui/Roboto-Regular.ttf','DATA')],
                    strip=None,
                    upx=True,
-                   name='Pupil Service')
+                   name='Pupil Player')
 
     app = BUNDLE(coll,
-                 name='Pupil Service.app',
-                 icon='pupil-service.icns',
+                 name='Pupil Player.app',
+                 icon='pupil-player.icns',
                  version = str(dpkg_deb_version()))
 
-
 elif platform.system() == 'Linux':
-    a = Analysis(['../../pupil_src/capture/main.py'],
-                 pathex=['../../pupil_src/shared_modules/'],
+    a = Analysis(['../pupil_src/player/main.py'],
+                 pathex=['../pupil_src/shared_modules/'],
                  hiddenimports=[]+av_hidden_imports+pyglui_hidden_imports,
                  hookspath=None,
                  runtime_hooks=None,
@@ -57,12 +57,11 @@ elif platform.system() == 'Linux':
     exe = EXE(pyz,
               a.scripts,
               exclude_binaries=True,
-              name='pupil_service',
+              name='pupil_player',
               debug=False,
-              strip=False,
+              strip=None,
               upx=True,
               console=True)
-
 
     # any libX file should be taken from distro else not protable between Ubuntu 12.04 and 14.04
     binaries = [b for b in a.binaries if not "libX" in b[0] and not "libxcb" in b[0]]
@@ -71,17 +70,17 @@ elif platform.system() == 'Linux':
 
     # libstdc++ is also not meant to travel with the bundle. Otherwise nvideo opengl drivers will fail to load.
     binaries = [b for b in binaries if not "libstdc++.so" in b[0]]
+
     coll = COLLECT(exe,
                    binaries,
                    a.zipfiles,
                    a.datas,
                    [('libglfw.so', '/usr/local/lib/libglfw.so','BINARY')],
-                   [('libGLEW.so', '/usr/lib/x86_64-linux-gnu/libGLEW.so','BINARY')],
                    [('OpenSans-Regular.ttf','/usr/local/lib/python2.7/dist-packages/pyglui/OpenSans-Regular.ttf','DATA')],
                    [('Roboto-Regular.ttf','/usr/local/lib/python2.7/dist-packages/pyglui/Roboto-Regular.ttf','DATA')],
                    strip=True,
                    upx=True,
-                   name='pupil_service')
+                   name='pupil_player')
 
 elif platform.system() == 'Windows':
 	import sys, os, os.path
@@ -109,32 +108,33 @@ elif platform.system() == 'Windows':
 	scipy_imports += ['scipy.integrate._ode', 'scipy.integrate.quadrature', 'scipy.integrate.odepack', 'scipy.integrate._odepack', 'scipy.integrate.quadpack', 'scipy.integrate._quadpack']
 	scipy_imports += ['scipy.integrate.vode', 'scipy.integrate.lsoda', 'scipy.integrate._dop', 'scipy.special._ufuncs', 'scipy.special._ufuncs_cxx']
 
-	a = Analysis(['../../pupil_src/capture/main.py'],
-	             pathex=['../../pupil_src/shared_modules/'],
+	a = Analysis(['../pupil_src/player/main.py'],
+	             pathex=['../pupil_src/shared_modules/'],
 	             hiddenimports=['pyglui.cygl.shader']+scipy_imports+av_hidden_imports,
 	             hookspath=None,
 	             runtime_hooks=None,
-               excludes=['pyx_compiler','matplotlib'])
+                 excludes=['pyx_compiler','matplotlib'])
 
 
 	pyz = PYZ(a.pure)
 	exe = EXE(pyz,
 	          a.scripts,
 	          exclude_binaries=True,
-	          name='pupil_service.exe',
-	          icon='pupil-service.ico',
+	          name='pupil_player.exe',
+	          icon='pupil-player.ico',
 	          debug=False,
 	          strip=None,
 	          upx=True,
-	          console=False,
-	          resources=['pupil-service.ico,ICON,GLFW_ICON'])
+	          console=True,
+	          resources=['pupil-player.ico,ICON,GLFW_ICON'])
+
 	coll = COLLECT(exe,
 	               a.binaries,
 	               a.zipfiles,
 	               a.datas,
-	               [('glfw3.dll', '../../pupil_src/shared_modules/external/glfw3.dll','BINARY')],
-	               [('glfw3.lib', '../../pupil_src/shared_modules/external/glfw3.lib','BINARY')],
-	               [('glfw3dll.lib', '../../pupil_src/shared_modules/external/glfw3dll.lib','BINARY')],
+	               [('glfw3.dll', '../pupil_src/shared_modules/external/glfw3.dll','BINARY')],
+	               [('glfw3.lib', '../pupil_src/shared_modules/external/glfw3.lib','BINARY')],
+	               [('glfw3dll.lib', '../pupil_src/shared_modules/external/glfw3dll.lib','BINARY')],
 	               [('opencv_ffmpeg2411.dll', os.path.join(python_path, 'opencv_ffmpeg2411.dll'),'BINARY')],
 	               [('_videoInput.lib', os.path.join(python_path, '_videoInput.lib'),'BINARY')],
 	               [('msvcp110.dll', os.path.join(system_path, 'msvcp110.dll'),'BINARY')],
@@ -144,6 +144,4 @@ elif platform.system() == 'Windows':
                    [('Roboto-Regular.ttf', os.path.join(package_path, 'pyglui/Roboto-Regular.ttf'),'DATA')],
 	               strip=None,
 	               upx=True,
-	               name='Pupil Service')
-
-
+	               name='Pupil Player')

@@ -11,7 +11,7 @@
 import uvc
 from uvc import device_list,is_accessible
 #check versions for our own depedencies as they are fast-changing
-assert uvc.__version__ >= '0.7'
+assert uvc.__version__ >= '0.6'
 
 from fake_capture import Fake_Capture
 
@@ -103,6 +103,7 @@ class Camera_Capture(object):
             pass
 
         if "Pupil Cam1" in self.capture.name or "USB2.0 Camera" in self.capture.name:
+            self.capture.bandwidth_factor = 1.8
             if "ID0" in self.capture.name or "ID1" in self.capture.name:
                 self.capture.bandwidth_factor = 1.3
                 try:
@@ -131,13 +132,13 @@ class Camera_Capture(object):
                 except KeyError:
                     pass
             else:
-                self.capture.bandwidth_factor = 2.0
+                self.capture.bandwidth_factor = 1.8
                 try:
                     controls_dict['Auto Exposure Priority'].value = 1
                 except KeyError:
                     pass
-        else:
-            self.capture.bandwidth_factor = 3.0
+        if "C525" in self.capture.name or  "B525" in self.capture.name or "C920" in self.capture.name:
+            self.capture.bandwidth_factor = 4.0
             try:
                 controls_dict['Auto Focus'].value = 0
             except KeyError:

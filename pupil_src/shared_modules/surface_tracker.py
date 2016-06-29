@@ -31,7 +31,7 @@ from math import sqrt
 class Surface_Tracker(Plugin):
     """docstring
     """
-    def __init__(self,g_pool,mode="Show Markers and Surfaces",min_marker_perimeter = 100,invert_image=False):
+    def __init__(self,g_pool,mode="Show Markers and Surfaces",min_marker_perimeter = 100):
         super(Surface_Tracker, self).__init__(g_pool)
         self.order = .2
 
@@ -54,7 +54,6 @@ class Surface_Tracker(Plugin):
         self.aperture = 11
         self.min_marker_perimeter = min_marker_perimeter
         self.locate_3d = False
-        self.invert_image = invert_image
 
         self.img_shape = None
 
@@ -155,7 +154,6 @@ class Surface_Tracker(Plugin):
         self.menu.append(ui.Button('Close',close))
         self.menu.append(ui.Info_Text('This plugin detects and tracks fiducial markers visible in the scene. You can define surfaces using 1 or more marker visible within the world view by clicking *add surface*. You can edit defined surfaces by selecting *Surface edit mode*.'))
         self.menu.append(ui.Switch('robust_detection',self,label='Robust detection'))
-        self.menu.append(ui.Switch('invert_image',self,label='Use inverted markers'))
         self.menu.append(ui.Slider('min_marker_perimeter',self,step=1,min=10,max=500))
         self.menu.append(ui.Switch('locate_3d',self,label='3D localization'))
         self.menu.append(ui.Selector('mode',self,label="Mode",selection=['Show Markers and Surfaces','Show marker IDs'] ))
@@ -189,27 +187,25 @@ class Surface_Tracker(Plugin):
                                                     min_marker_perimeter=self.min_marker_perimeter,
                                                     aperture=self.aperture,
                                                     visualize=0,
-                                                    true_detect_every_frame=3,
-                                                    invert_image=self.invert_image)
+                                                    true_detect_every_frame=3)
             else:
                 self.markers = detect_markers(gray,
                                                 grid_size = 5,
                                                 min_marker_perimeter=self.min_marker_perimeter,
                                                 aperture=self.aperture,
-                                                visualize=0,
-                                                invert_image=self.invert_image)
+                                                visualize=0)
 
 
             if self.mode == "Show marker IDs":
-                draw_markers(frame.gray,self.markers)
+                draw_markers(frame.img,self.markers)
 
-        events['surface'] = []
+        events['surfaces'] = []
 
         # locate surfaces
         for s in self.surfaces:
             s.locate(self.markers,self.camera_calibration,self.min_marker_perimeter, self.locate_3d)
             if s.detected:
-                events['surface'].append({'name':s.name,'uid':s.uid,'m_to_screen':s.m_to_screen.tolist(),'m_from_screen':s.m_from_screen.tolist(), 'timestamp':frame.timestamp,'camera_pose_3d':s.camera_pose_3d.tolist()})
+                events['surfaces'].append({'name':s.name,'uid':s.uid,'m_to_screen':s.m_to_screen.tolist(),'m_from_screen':s.m_from_screen.tolist(), 'timestamp':frame.timestamp})
 
         if self.running:
             self.button.status_text = '%s/%s'%(len([s for s in self.surfaces if s.detected]),len(self.surfaces))
@@ -278,7 +274,7 @@ class Surface_Tracker(Plugin):
 
         for s in self.surfaces:
             if self.locate_3d:
-                s.gl_display_in_window_3d(self.g_pool.image_tex,self.camera_calibration)
+                s.gl_display_in_window_3d(self.g_pool.image_tex,self.camera_intrinsics)
             else:
                 s.gl_display_in_window(self.g_pool.image_tex)
 

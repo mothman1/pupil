@@ -13,7 +13,7 @@ from plugin import Plugin
 import numpy as np
 from pyglui import ui
 import zmq
-from zmq_tools import serializer
+import json
 
 
 import logging
@@ -74,8 +74,11 @@ class Pupil_Server(Plugin):
 
     def update(self,frame,events):
         for topic,data in events.iteritems():
-            for d in data:
-                self.socket.send_multipart((topic, serializer.dumps(d)))
+            if type(data) in (tuple,list):
+                for d in data:
+                    self.socket.send_multipart((topic, json.dumps(d)))
+            else:
+                self.socket.send_multipart((topic, json.dumps(data)))
 
     def close(self):
         self.alive = False

@@ -22,7 +22,7 @@ import calibrate
 import audio
 
 from pyglui import ui
-from calibration_plugin_base import Calibration_Plugin
+from plugin import Calibration_Plugin
 
 #logging
 import logging

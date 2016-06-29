@@ -40,14 +40,15 @@ cdef class Detector_2D:
     cdef int coarseDetectionPreviousWidth
     cdef object coarseDetectionPreviousPosition
 
-    def __cinit__(self,g_pool = None, settings = None ):
+    def __cinit__(self):
         self.thisptr = new Detector2D()
-    def __init__(self, g_pool = None, settings = None ):
+    def __init__(self, gPool = None, settings = None ):
+
         #debug window
         self._window = None
         self.windowShouldOpen = False
         self.windowShouldClose = False
-        self.gPool = g_pool
+        self.gPool = gPool
         self.detectProperties = settings or {}
         self.coarseDetectionPreviousWidth = -1
         self.coarseDetectionPreviousPosition =  (0,0)
