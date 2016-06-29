@@ -10,6 +10,9 @@ from uuid import getnode as get_mac
 import json
 logger = logging.getLogger(__name__)
 
+# service_base_uri = 'http://api.opescode.com'
+service_base_uri = 'http://api.opescode.com'
+
 class InMemoryZip(object):
     def __init__(self):
         # Create the in-memory file-like object
@@ -47,7 +50,8 @@ class InMemoryZip(object):
         self.in_memory_zip.close()
         # post request to api
         session = FuturesSession()
-        api_uri = 'http://api.opescode.com/api/UserData?id=%s' %str(job_api_id)
+        # api_uri = 'http://api.opescode.com/api/UserData?id=%s' %str(job_api_id)
+        api_uri = '{0}/api/UserData?id={1}'.format(service_base_uri, str(job_api_id))
         logger.info('Calling web api {0}. for file {1}'.format(api_uri, filename))
         def bg_cb(sess, resp):
             print filename, resp.status_code
@@ -103,7 +107,8 @@ class crowd_eye(Plugin):
         # use hex mac address as the username for this device on the api
         username = format(mac, 'x')
         session = FuturesSession()
-        future = session.get('http://api.opescode.com/api/Users?username=' + username)
+        # future = session.get('http://api.opescode.com/api/Users?username=' + username)
+        future = session.get('{0}/api/Users?username={1}'.format(service_base_uri, username))
         response = future.result()
         print 'GetApiUser response -> ', response.status_code
         logger.info('GetApiUser response %s.'%str(response.status_code))
@@ -112,7 +117,8 @@ class crowd_eye(Plugin):
             logger.error('GetApiUser -> user not found. Requesting a new user')
             user = {'Username': username, 'Name': username, 'Title': '', 'Email': 'm.othman1@ncl.ac.uk'}
             headers = {'Content-Type': 'application/json'}
-            future = session.post('http://api.opescode.com/api/Users', json=user, headers=headers)
+            # future = session.post('http://api.opescode.com/api/Users', json=user, headers=headers)
+            future = session.post('{0}/api/Users'.format(service_base_uri), json=user, headers=headers)
             response = future.result()
             if response.status_code != 200:
                 print 'GetApiUser -> user could not be created'
@@ -136,7 +142,8 @@ class crowd_eye(Plugin):
         session = FuturesSession()
         member_job = {'UserId': user_id, 'Id': 0, 'Title': title, 'Instructions': 'Find the center of the eye pupil'}
         headers = {'Content-Type': 'application/json'}
-        future = session.post('http://api.opescode.com/api/MemberJobs', json=member_job, headers=headers)
+        # future = session.post('http://api.opescode.com/api/MemberJobs', json=member_job, headers=headers)
+        future = session.post('{0}/api/MemberJobs'.format(service_base_uri), json=member_job, headers=headers)
         response = future.result()
         stc = response.status_code
         print 'CreateApiJob response -> ', stc
