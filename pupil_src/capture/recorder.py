@@ -290,6 +290,10 @@ class Recorder(Plugin):
                     self.total_frames += 1
                     # end
                     try:
+                        # # Mohammad - Add world timestamp to pupil_data py file
+                        # for item in data:
+                        #     item['world_timestamp'] = frame.timestamp
+                        # # End
                         self.data[key] += data
                     except KeyError:
                         self.data[key] = []

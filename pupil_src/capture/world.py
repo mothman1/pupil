@@ -94,16 +94,16 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
 
     # Plug-ins
     from plugin import Plugin_List,import_runtime_plugins
-    from calibration_routines import calibration_plugins, gaze_mapping_plugins
+    from calibration_routines import calibration_plugins # , gaze_mapping_plugins
     from recorder import Recorder
     from show_calibration import Show_Calibration
-    from display_recent_gaze import Display_Recent_Gaze
-    from pupil_server import Pupil_Server
-    from pupil_sync import Pupil_Sync
-    from surface_tracker import Surface_Tracker
+    # from display_recent_gaze import Display_Recent_Gaze
+    # from pupil_server import Pupil_Server
+    # from pupil_sync import Pupil_Sync
+    # from surface_tracker import Surface_Tracker
     from log_display import Log_Display
     from annotations import Annotation_Capture
-    from pupil_remote import Pupil_Remote
+    # from pupil_remote import Pupil_Remote
     from log_history import Log_History
 
     logger.info('Application Version: %s'%version)
@@ -138,12 +138,13 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
 
     #manage plugins
     runtime_plugins = import_runtime_plugins(os.path.join(g_pool.user_dir,'plugins'))
-    user_launchable_plugins = [Show_Calibration,Pupil_Remote,Pupil_Server,Pupil_Sync,Surface_Tracker,Annotation_Capture,Log_History]+runtime_plugins
-    system_plugins  = [Log_Display,Display_Recent_Gaze,Recorder]
-    plugin_by_index =  system_plugins+user_launchable_plugins+calibration_plugins+gaze_mapping_plugins
+    user_launchable_plugins = [Show_Calibration,Annotation_Capture,Log_History]+runtime_plugins # [Show_Calibration,Pupil_Remote,Pupil_Server,Pupil_Sync,Surface_Tracker,Annotation_Capture,Log_History]+runtime_plugins
+    system_plugins  = [Log_Display,Recorder] # [Log_Display,Display_Recent_Gaze,Recorder]
+    plugin_by_index =  system_plugins+user_launchable_plugins+calibration_plugins # +gaze_mapping_plugins
     name_by_index = [p.__name__ for p in plugin_by_index]
     plugin_by_name = dict(zip(name_by_index,plugin_by_index))
-    default_plugins = [('Log_Display',{}),('Dummy_Gaze_Mapper',{}),('Display_Recent_Gaze',{}), ('Screen_Marker_Calibration',{}),('Recorder',{})]
+    default_plugins = [('Log_Display',{}),('Screen_Marker_Calibration',{}),('Recorder',{})]
+    # [('Log_Display',{}),('Dummy_Gaze_Mapper',{}),('Display_Recent_Gaze',{}), ('Screen_Marker_Calibration',{}),('Recorder',{})]
 
 
     # Callback functions
@@ -215,7 +216,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     g_pool.iconified = False
     g_pool.capture = cap
     g_pool.pupil_confidence_threshold = session_settings.get('pupil_confidence_threshold',.6)
-    g_pool.detection_mapping_mode = session_settings.get('detection_mapping_mode','2d')
+    # g_pool.detection_mapping_mode = session_settings.get('detection_mapping_mode','2d')
     g_pool.active_calibration_plugin = None
 
 
@@ -235,7 +236,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
             logger.error("Eye%s process already running."%eye_id)
             return
         launcher_pipe.send(eye_id)
-        eye_pipes[eye_id].send( ('Set_Detection_Mapping_Mode',g_pool.detection_mapping_mode) )
+        # eye_pipes[eye_id].send( ('Set_Detection_Mapping_Mode',g_pool.detection_mapping_mode) )
 
         if blocking:
             #wait for ready message from eye to sequentialize startup
@@ -257,17 +258,17 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
         else:
             stop_eye_process(eye_id)
 
-    def set_detection_mapping_mode(new_mode):
-        if new_mode == '2d':
-            for p in g_pool.plugins:
-                if "Vector_Gaze_Mapper" in p.class_name:
-                    logger.warning("The gaze mapper is not supported in 2d mode. Please recalibrate.")
-                    p.alive = False
-            g_pool.plugins.clean()
-        for alive, pipe in zip(g_pool.eyes_are_alive,g_pool.eye_pipes):
-            if alive.value:
-                pipe.send( ('Set_Detection_Mapping_Mode',new_mode) )
-        g_pool.detection_mapping_mode = new_mode
+    # def set_detection_mapping_mode(new_mode):
+    #     if new_mode == '2d':
+    #         for p in g_pool.plugins:
+    #             if "Vector_Gaze_Mapper" in p.class_name:
+    #                 logger.warning("The gaze mapper is not supported in 2d mode. Please recalibrate.")
+    #                 p.alive = False
+    #         g_pool.plugins.clean()
+    #     for alive, pipe in zip(g_pool.eyes_are_alive,g_pool.eye_pipes):
+    #         if alive.value:
+    #             pipe.send( ('Set_Detection_Mapping_Mode',new_mode) )
+    #     g_pool.detection_mapping_mode = new_mode
 
 
     #window and gl setup
@@ -290,7 +291,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     general_settings.append(ui.Slider('scale',g_pool.gui, setter=set_scale,step = .05,min=1.,max=2.5,label='Interface size'))
     general_settings.append(ui.Button('Reset window size',lambda: glfw.glfwSetWindowSize(main_window,frame.width,frame.height)) )
     general_settings.append(ui.Selector('audio_mode',audio,selection=audio.audio_modes))
-    general_settings.append(ui.Selector('detection_mapping_mode',g_pool,label='detection & mapping mode',setter=set_detection_mapping_mode,selection=['2d','3d']))
+    # general_settings.append(ui.Selector('detection_mapping_mode',g_pool,label='detection & mapping mode',setter=set_detection_mapping_mode,selection=['2d','3d']))
     general_settings.append(ui.Switch('eye0_process',label='Detect eye 0',setter=lambda alive: start_stop_eye(0,alive),getter=lambda: eyes_are_alive[0].value ))
     general_settings.append(ui.Switch('eye1_process',label='Detect eye 1',setter=lambda alive: start_stop_eye(1,alive),getter=lambda: eyes_are_alive[1].value ))
     general_settings.append(ui.Selector('Open plugin', selection = user_launchable_plugins,
@@ -326,12 +327,14 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     glfw.glfwSetCursorPosCallback(main_window,on_pos)
     glfw.glfwSetScrollCallback(main_window,on_scroll)
 
+    ''' Mohammad - The following is maybe not necessary for client '''
     # gl_state settings
     basic_gl_setup()
     g_pool.image_tex = Named_Texture()
     g_pool.image_tex.update_from_frame(frame)
     # refresh speed settings
     glfw.glfwSwapInterval(0)
+    ''' End '''
 
     #trigger setup of window and gl sizes
     on_resize(main_window, *glfw.glfwGetFramebufferSize(main_window))
@@ -432,6 +435,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
         #check if a plugin need to be destroyed
         g_pool.plugins.clean()
 
+        ''' Mohammad - The following is maybe not necessary for client '''
         # render camera image
         glfw.glfwMakeContextCurrent(main_window)
         if g_pool.iconified:
@@ -442,6 +446,8 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
         make_coord_system_norm_based()
         g_pool.image_tex.draw()
         make_coord_system_pixel_based((frame.height,frame.width,3))
+        ''' End '''
+
         # render visual feedback from loaded plugins
         for p in g_pool.plugins:
             p.gl_display()
@@ -450,7 +456,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
             graph.push_view()
             fps_graph.draw()
             cpu_graph.draw()
-            pupil_graph.draw()
+            # pupil_graph.draw()
             graph.pop_view()
             g_pool.gui.update()
             glfw.glfwSwapBuffers(main_window)
@@ -467,7 +473,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     session_settings['version'] = g_pool.version
     session_settings['eye0_process_alive'] = eyes_are_alive[0].value
     session_settings['eye1_process_alive'] = eyes_are_alive[1].value
-    session_settings['detection_mapping_mode'] = g_pool.detection_mapping_mode
+    # session_settings['detection_mapping_mode'] = g_pool.detection_mapping_mode
     session_settings['audio_mode'] = audio.audio_mode
     session_settings.close()
 

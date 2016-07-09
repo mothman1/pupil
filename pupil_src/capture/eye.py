@@ -37,21 +37,21 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
     """
     is_alive = Is_Alive_Manager(is_alive_flag)
     with is_alive:
-        #logging setup: We stream all log records to the world process.
+        # #logging setup: We stream all log records to the world process.
         import logging
-        import zmq
-        ctx = zmq.Context()
-        pub = ctx.socket(zmq.PUB)
-        pub.connect('tcp://127.0.0.1:502020')
-
-        class ZMQ_handler(logging.Handler):
-            def emit(self, record):
-                pub.send_pyobj(record)
-
-        logger = logging.getLogger()
-        logger.handlers = []
-        logger.setLevel(logging.INFO)
-        logger.addHandler(ZMQ_handler())
+        # import zmq
+        # ctx = zmq.Context()
+        # pub = ctx.socket(zmq.PUB)
+        # pub.connect('tcp://127.0.0.1:502020')
+        #
+        # class ZMQ_handler(logging.Handler):
+        #     def emit(self, record):
+        #         pub.send_pyobj(record)
+        #
+        # logger = logging.getLogger()
+        # logger.handlers = []
+        # logger.setLevel(logging.INFO)
+        # logger.addHandler(ZMQ_handler())
 
         # create logger for the context of this function
         logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         #display
         import glfw
         from pyglui import ui,graph,cygl
-        from pyglui.cygl.utils import draw_points, RGBA, draw_polyline, Named_Texture, Sphere
+        from pyglui.cygl.utils import Named_Texture #, draw_points, RGBA, draw_polyline, Sphere
         import OpenGL.GL as gl
         from gl_utils import basic_gl_setup,adjust_gl_view, clear_gl_screen ,make_coord_system_pixel_based,make_coord_system_norm_based, make_coord_system_eye_camera_based
         from ui_roi import UIRoi
@@ -84,9 +84,9 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         from video_capture import autoCreateCapture, FileCaptureError, EndofVideoFileError, CameraCaptureError
         from av_writer import JPEG_Writer,AV_Writer
 
-        # Pupil detectors
-        from pupil_detectors import Detector_2D, Detector_3D
-        pupil_detectors = {Detector_2D.__name__:Detector_2D,Detector_3D.__name__:Detector_3D}
+        # # Pupil detectors
+        # from pupil_detectors import Detector_2D, Detector_3D
+        # pupil_detectors = {Detector_2D.__name__:Detector_2D,Detector_3D.__name__:Detector_3D}
 
 
 
@@ -213,9 +213,9 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
         writer = None
 
-        pupil_detector_settings = session_settings.get('pupil_detector_settings',None)
-        last_pupil_detector = pupil_detectors[session_settings.get('last_pupil_detector',Detector_2D.__name__)]
-        g_pool.pupil_detector = last_pupil_detector(g_pool,pupil_detector_settings)
+        # pupil_detector_settings = session_settings.get('pupil_detector_settings',None)
+        # last_pupil_detector = pupil_detectors[session_settings.get('last_pupil_detector',Detector_2D.__name__)]
+        # g_pool.pupil_detector = last_pupil_detector(g_pool,pupil_detector_settings)
 
         # UI callback functions
         def set_scale(new_scale):
@@ -228,10 +228,10 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
             g_pool.display_mode_info.text = g_pool.display_mode_info_text[val]
 
 
-        def set_detector(new_detector):
-            g_pool.pupil_detector.cleanup()
-            g_pool.pupil_detector = new_detector(g_pool)
-            g_pool.pupil_detector.init_gui(g_pool.sidebar)
+        # def set_detector(new_detector):
+        #     g_pool.pupil_detector.cleanup()
+        #     g_pool.pupil_detector = new_detector(g_pool)
+        #     g_pool.pupil_detector.init_gui(g_pool.sidebar)
 
 
         # Initialize glfw
@@ -250,7 +250,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         g_pool.image_tex.update_from_frame(frame)
         glfw.glfwSwapInterval(0)
 
-        sphere  = Sphere(20)
+        # sphere  = Sphere(20)
 
         #setup GUI
         g_pool.gui = ui.UI()
@@ -265,11 +265,11 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         general_settings.append(g_pool.display_mode_info)
         g_pool.sidebar.append(general_settings)
         g_pool.gui.append(g_pool.sidebar)
-        detector_selector = ui.Selector('pupil_detector',getter = lambda: g_pool.pupil_detector.__class__ ,setter=set_detector,selection=[Detector_2D, Detector_3D],labels=['C++ 2d detector', 'C++ 3d detector'], label="Detection method")
-        general_settings.append(detector_selector)
+        # detector_selector = ui.Selector('pupil_detector',getter = lambda: g_pool.pupil_detector.__class__ ,setter=set_detector,selection=[Detector_2D, Detector_3D],labels=['C++ 2d detector', 'C++ 3d detector'], label="Detection method")
+        # general_settings.append(detector_selector)
 
-        # let detector add its GUI
-        g_pool.pupil_detector.init_gui(g_pool.sidebar)
+        # # let detector add its GUI
+        # g_pool.pupil_detector.init_gui(g_pool.sidebar)
         # let the camera add its GUI
         g_pool.capture.init_gui(g_pool.sidebar)
 
@@ -326,14 +326,14 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
                     command = None
                 else:
                     command,payload = cmd
-                if command == 'Set_Detection_Mapping_Mode':
-                    if payload == '3d':
-                        if not isinstance(g_pool.pupil_detector,Detector_3D):
-                            set_detector(Detector_3D)
-                        detector_selector.read_only  = True
-                    else:
-                        set_detector(Detector_2D)
-                        detector_selector.read_only = False
+                # if command == 'Set_Detection_Mapping_Mode':
+                #     if payload == '3d':
+                #         if not isinstance(g_pool.pupil_detector,Detector_3D):
+                #             set_detector(Detector_3D)
+                #         detector_selector.read_only  = True
+                #     else:
+                #         set_detector(Detector_2D)
+                #         detector_selector.read_only = False
 
             else:
                 command = None
@@ -388,10 +388,18 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
 
             # pupil ellipse detection
-            result = g_pool.pupil_detector.detect(frame, g_pool.u_r, g_pool.display_mode == 'algorithm')
+            # result = g_pool.pupil_detector.detect(frame, g_pool.u_r, g_pool.display_mode == 'algorithm')
+            result = {}
+            result['confidence'] = 0
+            result['ellipse'] = {}
+            result['diameter'] = 0.0
+
+            result['norm_pos'] = 0,0
+            result['timestamp'] = frame.timestamp
+            result['method'] = '2d c++'
             result['id'] = eye_id
             # Mohammad: Add eye frame to the queue to send it to crowd eye api
-            result['eye_img'] = frame.img
+            # result['eye_img'] = frame.img
             # stream the result
             g_pool.pupil_queue.put(result)
 
@@ -415,26 +423,26 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
                     window_size =  glfw.glfwGetWindowSize(main_window)
                     make_coord_system_pixel_based((frame.height,frame.width,3),g_pool.flip)
 
-                    if result['method'] == '3d c++':
+                    # if result['method'] == '3d c++':
+                    #
+                    #     eye_ball = result['projected_sphere']
+                    #     try:
+                    #         pts = cv2.ellipse2Poly( (int(eye_ball['center'][0]),int(eye_ball['center'][1])),
+                    #                             (int(eye_ball['axes'][0]/2),int(eye_ball['axes'][1]/2)),
+                    #                             int(eye_ball['angle']),0,360,8)
+                    #     except ValueError as e:
+                    #         pass
+                    #     else:
+                    #         draw_polyline(pts,2,RGBA(0.,.9,.1,result['model_confidence']) )
 
-                        eye_ball = result['projected_sphere']
-                        try:
-                            pts = cv2.ellipse2Poly( (int(eye_ball['center'][0]),int(eye_ball['center'][1])),
-                                                (int(eye_ball['axes'][0]/2),int(eye_ball['axes'][1]/2)),
-                                                int(eye_ball['angle']),0,360,8)
-                        except ValueError as e:
-                            pass
-                        else:
-                            draw_polyline(pts,2,RGBA(0.,.9,.1,result['model_confidence']) )
-
-                    if result['confidence'] >0:
-                        if result.has_key('ellipse'):
-                            pts = cv2.ellipse2Poly( (int(result['ellipse']['center'][0]),int(result['ellipse']['center'][1])),
-                                            (int(result['ellipse']['axes'][0]/2),int(result['ellipse']['axes'][1]/2)),
-                                            int(result['ellipse']['angle']),0,360,15)
-                            confidence = result['confidence'] * 0.7 #scale it a little
-                            draw_polyline(pts,1,RGBA(1.,0,0,confidence))
-                            draw_points([result['ellipse']['center']],size=20,color=RGBA(1.,0.,0.,confidence),sharpness=1.)
+                    # if result['confidence'] >0:
+                    #     if result.has_key('ellipse'):
+                    #         pts = cv2.ellipse2Poly( (int(result['ellipse']['center'][0]),int(result['ellipse']['center'][1])),
+                    #                         (int(result['ellipse']['axes'][0]/2),int(result['ellipse']['axes'][1]/2)),
+                    #                         int(result['ellipse']['angle']),0,360,15)
+                    #         confidence = result['confidence'] * 0.7 #scale it a little
+                    #         draw_polyline(pts,1,RGBA(1.,0,0,confidence))
+                    #         draw_points([result['ellipse']['center']],size=20,color=RGBA(1.,0.,0.,confidence),sharpness=1.)
 
                     # render graphs
                     graph.push_view()
@@ -453,7 +461,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
                     #update screen
                     glfw.glfwSwapBuffers(main_window)
                 glfw.glfwPollEvents()
-                g_pool.pupil_detector.visualize() #detector decides if we visualize or not
+                # g_pool.pupil_detector.visualize() #detector decides if we visualize or not
 
 
         # END while running
@@ -475,11 +483,11 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         session_settings['window_size'] = glfw.glfwGetWindowSize(main_window)
         session_settings['window_position'] = glfw.glfwGetWindowPos(main_window)
         session_settings['version'] = g_pool.version
-        session_settings['last_pupil_detector'] = g_pool.pupil_detector.__class__.__name__
-        session_settings['pupil_detector_settings'] = g_pool.pupil_detector.get_settings()
+        # session_settings['last_pupil_detector'] = g_pool.pupil_detector.__class__.__name__
+        # session_settings['pupil_detector_settings'] = g_pool.pupil_detector.get_settings()
         session_settings.close()
 
-        g_pool.pupil_detector.cleanup()
+        # g_pool.pupil_detector.cleanup()
         g_pool.gui.terminate()
         glfw.glfwDestroyWindow(main_window)
         glfw.glfwTerminate()

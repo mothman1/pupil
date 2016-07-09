@@ -50,8 +50,8 @@ eye1_src = ["Pupil Cam1 ID1","HD-6000","Integrated Camera"]
 
 # to use a pre-recorded video.
 # Use a string to specify the path to your video file as demonstrated below
-# world_src = "/Users/mkassner/Downloads/000/world.mkv"
-# eye0_src = '/Users/mkassner/Downloads/eye0.mkv'
+# world_src = "/Developments/NCLUni/pupil_crowd/recordings/2016_07_01/004/world.mp4"
+# eye0_src = '/Developments/NCLUni/pupil_crowd/recordings/2016_07_01/004/eye0.mp4'
 # eye1_src =  '/Users/mkassner/Downloads/eye.avi'
 
 video_sources = {'world':world_src,'eye0':eye0_src,'eye1':eye1_src}

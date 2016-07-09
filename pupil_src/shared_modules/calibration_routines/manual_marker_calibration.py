@@ -57,7 +57,6 @@ class Manual_Marker_Calibration(Calibration_Plugin):
         self.menu = None
         self.button = None
 
-
     def init_gui(self):
 
         self.info = ui.Info_Text("Calibrate gaze parameters using a handheld marker.")
