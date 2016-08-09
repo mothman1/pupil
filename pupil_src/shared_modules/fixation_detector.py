@@ -163,7 +163,7 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
                         confidence = sum(g['confidence'] for g in fixation_support)/len(fixation_support)
 
                         # avg pupil size  = mean of (mean of pupil size per gaze ) for all gaze points of support
-                        avg_pupil_size =  sum([sum([p['diameter'] for p in g['base']])/len(g['base']) for g in fixation_support])/len(fixation_support)
+                        # avg_pupil_size =  sum([sum([p['diameter'] for p in g['base']])/len(g['base']) for g in fixation_support])/len(fixation_support)
                         new_fixation = {'id': len(fixations),
                                         'norm_pos':fixation_centroid,
                                         'gaze':fixation_support,
@@ -173,7 +173,7 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
                                         'end_frame_index':fixation_support[-1]['index'],
                                         'pix_dispersion':dispersion*self.pix_per_degree,
                                         'timestamp':fixation_support[0]['timestamp'],
-                                        'pupil_diameter':avg_pupil_size,
+                                        # 'pupil_diameter':avg_pupil_size,
                                         'confidence':confidence}
                         fixations.append(new_fixation)
                 if gaze_data:
@@ -222,9 +222,12 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
 
         with open(os.path.join(export_dir,'fixations.csv'),'wb') as csvfile:
             csv_writer = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(('id','start_timestamp','duration','start_frame','end_frame','norm_pos_x','norm_pos_y','dispersion','avg_pupil_size','confidence'))
+            # csv_writer.writerow(('id','start_timestamp','duration','start_frame','end_frame','norm_pos_x','norm_pos_y','dispersion','avg_pupil_size','confidence'))
+            # for f in fixations_in_section:
+            #     csv_writer.writerow( ( f['id'],f['timestamp'],f['duration'],f['start_frame_index'],f['end_frame_index'],f['norm_pos'][0],f['norm_pos'][1],f['dispersion'],f['pupil_diameter'],f['confidence'] ) )
+            csv_writer.writerow(('id','start_timestamp','duration','start_frame','end_frame','norm_pos_x','norm_pos_y','dispersion','confidence'))
             for f in fixations_in_section:
-                csv_writer.writerow( ( f['id'],f['timestamp'],f['duration'],f['start_frame_index'],f['end_frame_index'],f['norm_pos'][0],f['norm_pos'][1],f['dispersion'],f['pupil_diameter'],f['confidence'] ) )
+                csv_writer.writerow( ( f['id'],f['timestamp'],f['duration'],f['start_frame_index'],f['end_frame_index'],f['norm_pos'][0],f['norm_pos'][1],f['dispersion'],f['confidence'] ) )
             logger.info("Created 'fixations.csv' file.")
 
         with open(os.path.join(export_dir,'fixation_report.csv'),'wb') as csvfile:
@@ -244,7 +247,7 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
                 x = int(f['norm_pos'][0]*self.img_size[0])
                 y = int((1-f['norm_pos'][1])*self.img_size[1])
                 transparent_circle(frame.img, (x,y), radius=f['pix_dispersion'], color=(.5, .2, .6, .7), thickness=-1)
-                cv2.putText(frame.img,'%i'%f['id'],(x+20,y), cv2.FONT_HERSHEY_DUPLEX,0.8,(255,150,100))
+                cv2.putText(frame.img,'%iReplaceMeWithCrowdEntries'%f['id'],(x+20,y), cv2.FONT_HERSHEY_DUPLEX,0.8,(255,50,50))
                 # cv2.putText(frame.img,'%i - %i'%(f['start_frame_index'],f['end_frame_index']),(x,y), cv2.FONT_HERSHEY_DUPLEX,0.8,(255,150,100))
 
     def close(self):

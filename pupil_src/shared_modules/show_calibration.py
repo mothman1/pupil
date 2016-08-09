@@ -38,7 +38,7 @@ class Show_Calibration(Plugin):
 
         width,height = self.g_pool.capture.frame_size
 
-        if g_pool.app == 'capture':
+        if g_pool.app == 'capture' or g_pool.app == 'offline_capture':
             cal_pt_path =  os.path.join(g_pool.user_dir,"user_calibration_data")
         else:
             cal_pt_path =  os.path.join(g_pool.rec_dir,"user_calibration_data")

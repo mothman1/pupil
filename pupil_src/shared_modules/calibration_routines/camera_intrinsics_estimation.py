@@ -65,7 +65,7 @@ def idealized_camera_calibration(resolution,f=1000.):
 
 
 def load_camera_calibration(g_pool):
-    if g_pool.app == 'capture':
+    if g_pool.app == 'capture' or g_pool.app == 'offline_capture':
         try:
             camera_calibration = load_object(os.path.join(g_pool.user_dir,'camera_calibration'))
         except:

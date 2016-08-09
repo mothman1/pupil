@@ -18,7 +18,7 @@ from methods import denormalize
 class Vis_Cross(Plugin):
     uniqueness = "not_unique"
 
-    def __init__(self, g_pool,inner=20,outer=100,color=(1.,0.0,0.0,1.0),thickness=1):
+    def __init__(self, g_pool,inner=20,outer=100,color=(1.,1.0,0.0,1.0),thickness=2):
         super(Vis_Cross, self).__init__(g_pool)
         self.order = .9
         self.menu = None

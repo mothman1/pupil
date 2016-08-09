@@ -33,7 +33,7 @@ class Pupil_Server(Plugin):
 
 
     def init_gui(self):
-        if self.g_pool.app == 'capture':
+        if self.g_pool.app == 'capture' or self.g_pool.app == 'offline_capture':
             self.menu = ui.Growing_Menu("Pupil Broadcast Server")
             self.g_pool.sidebar.append(self.menu)
         elif self.g_pool.app == 'player':
@@ -48,7 +48,7 @@ class Pupil_Server(Plugin):
 
     def deinit_gui(self):
         if self.menu:
-            if self.g_pool.app == 'capture':
+            if self.g_pool.app == 'capture' or self.g_pool.app == 'offline_capture':
                 self.g_pool.sidebar.remove(self.menu)
             elif self.g_pool.app == 'player':
                 self.g_pool.gui.remove(self.menu)

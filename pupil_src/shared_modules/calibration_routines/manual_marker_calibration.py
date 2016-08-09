@@ -60,24 +60,26 @@ class Manual_Marker_Calibration(Calibration_Plugin):
 
     def init_gui(self):
 
-        self.info = ui.Info_Text("Calibrate gaze parameters using a handheld marker.")
-        self.g_pool.calibration_menu.append(self.info)
-
-        self.menu = ui.Growing_Menu('Controls')
-        self.g_pool.calibration_menu.append(self.menu)
-
-        self.button = ui.Thumb('active',self,setter=self.toggle,label='Calibrate',hotkey='c')
-        self.button.on_color[:] = (.3,.2,1.,.9)
-        self.g_pool.quickbar.insert(0,self.button)
+        # self.info = ui.Info_Text("Calibrate gaze parameters using a handheld marker.")
+        # self.g_pool.calibration_menu.append(self.info)
+        #
+        # self.menu = ui.Growing_Menu('Controls')
+        # self.g_pool.calibration_menu.append(self.menu)
+        #
+        # self.button = ui.Thumb('active',self,setter=self.toggle,label='Calibrate',hotkey='c')
+        # self.button.on_color[:] = (.3,.2,1.,.9)
+        # self.g_pool.quickbar.insert(0,self.button)
+        pass
 
     def deinit_gui(self):
-        if self.menu:
-            self.g_pool.calibration_menu.remove(self.menu)
-            self.g_pool.calibration_menu.remove(self.info)
-            self.menu = None
-        if self.button:
-            self.g_pool.quickbar.remove(self.button)
-            self.button = None
+        # if self.menu:
+        #     self.g_pool.calibration_menu.remove(self.menu)
+        #     self.g_pool.calibration_menu.remove(self.info)
+        #     self.menu = None
+        # if self.button:
+        #     self.g_pool.quickbar.remove(self.button)
+        #     self.button = None
+        pass
 
 
     def toggle(self,_=None):
@@ -100,7 +102,7 @@ class Manual_Marker_Calibration(Calibration_Plugin):
         self.screen_marker_state = 0
         self.active = False
         #self.close_window()
-        self.button.status_text = ''
+        # self.button.status_text = ''
         finish_calibration(self.g_pool,self.pupil_list,self.ref_list)
         # Mohammad: send a notification that calibration stopped to be caught by CRowd eye plugin
         self.notify_all( {'subject':'cal_stopped'} )
@@ -206,13 +208,13 @@ class Manual_Marker_Calibration(Calibration_Plugin):
                 if p_pt['confidence'] > self.g_pool.pupil_confidence_threshold:
                     self.pupil_list.append(p_pt)
 
-            if self.counter:
-                if self.detected:
-                    self.button.status_text = 'Sampling Gaze Data'
-                else:
-                    self.button.status_text = 'Marker Lost'
-            else:
-                self.button.status_text = 'Looking for Marker'
+            # if self.counter:
+            #     if self.detected:
+            #         self.button.status_text = 'Sampling Gaze Data'
+            #     else:
+            #         self.button.status_text = 'Marker Lost'
+            # else:
+            #     self.button.status_text = 'Looking for Marker'
 
 
 

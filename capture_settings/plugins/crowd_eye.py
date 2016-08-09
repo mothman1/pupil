@@ -204,6 +204,7 @@ class crowd_eye(Plugin):
             self.calibrating = True
         elif notification['subject'] in ('should_stop_calibration', 'cal_stopped'):
             self.calibrating = False
+            self.notify_all({'subject':'should_stop_recording'})
 
 
     '''frame: the world frame

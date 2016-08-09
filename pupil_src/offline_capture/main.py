@@ -36,12 +36,12 @@ from multiprocessing import Process, Pipe, Queue, Value,active_children, freeze_
 from ctypes import c_double,c_bool
 
 if 'profiled' in sys.argv:
-    from world import world_profiled as world
-    from eye import eye_profiled as eye
+    from offline_world import world_profiled as world
+    from offline_eye import eye_profiled as eye
     logger.warning("Profiling active.")
 else:
-    from world import world
-    from eye import eye
+    from offline_world import world
+    from offline_eye import eye
 
 # To assign camera by name: put string(s) in list
 world_src = ["Pupil Cam1 ID2","Logitech Camera","(046d:081d)","C510","B525", "C525","C615","C920","C930e"]

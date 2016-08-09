@@ -59,7 +59,7 @@ class Offline_Surface_Tracker(Surface_Tracker):
         super(Offline_Surface_Tracker, self).__init__(g_pool,mode,min_marker_perimeter)
         self.order = .2
 
-        if g_pool.app == 'capture':
+        if g_pool.app == 'capture' or g_pool.app == 'offline_capture':
            raise Exception('For Player only.')
 
         self.marker_cache_version = 1

@@ -280,7 +280,7 @@ class Plugin_List(object):
         plugin_instance = new_plugin(self.g_pool,**args)
         self._plugins.append(plugin_instance)
         self._plugins.sort(key=lambda p: p.order)
-        if self.g_pool.app in ("capture","player") and plugin_instance.alive: #make sure the plugin does not want to be gone already
+        if self.g_pool.app in ("offline_capture","capture","player") and plugin_instance.alive: #make sure the plugin does not want to be gone already
             plugin_instance.init_gui()
             logger.info("Loaded: %s"%new_plugin.__name__)
         self.clean()
