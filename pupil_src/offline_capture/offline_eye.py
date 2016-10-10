@@ -7,6 +7,7 @@
  License details are in the file license.txt, distributed as part of this software.
 ----------------------------------------------------------------------------------~(*)
 '''
+from glfw import *
 import os, sys, platform
 
 class Global_Container(object):
@@ -112,6 +113,8 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         g_pool.pupil_queue = pupil_queue
         g_pool.timebase = timebase
 
+        # Mohammad: Force no visual update to happen - e.g. Dont display captured frames
+        no_visual_update = True
 
         # Callback functions
         def on_resize(window,w, h):
@@ -125,12 +128,16 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
         def on_key(window, key, scancode, action, mods):
             g_pool.gui.update_key(key,scancode,action,mods)
+            ''' On Enter key click start recording of end recording '''
+            if action == 1 and key == GLFW_KEY_ENTER:
+                pipe_to_world.send(GLFW_KEY_ENTER)
 
         def on_char(window,char):
             g_pool.gui.update_char(char)
 
         def on_iconify(window,iconified):
-            g_pool.iconified = iconified
+            ''' forrce no visual update - Dont update frames display while capturing to minimize CPU and memory usage '''
+            g_pool.iconified = iconified or no_visual_update
 
         def on_button(window,button, action, mods):
             if g_pool.display_mode == 'roi':
@@ -193,7 +200,7 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
 
         # any object we attach to the g_pool object *from now on* will only be visible to this process!
         # vars should be declared here to make them visible to the code reader.
-        g_pool.iconified = False
+        g_pool.iconified = False or no_visual_update
         g_pool.capture = cap
         g_pool.flip = session_settings.get('flip',False)
         g_pool.display_mode = session_settings.get('display_mode','camera_image')
@@ -313,6 +320,9 @@ def eye(pupil_queue, timebase, pipe_to_world, is_alive_flag, user_dir, version, 
         def window_should_update():
             return next(window_update_timer)
 
+        # Mohammad: Start recording automatically as soon as the application starts
+        pipe_to_world.send(GLFW_KEY_ENTER)
+        # End
 
         # Event loop
         while not glfw.glfwWindowShouldClose(main_window):

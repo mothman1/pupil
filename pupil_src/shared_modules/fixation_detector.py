@@ -44,7 +44,7 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
         + duration (temporal) = what is the minimum time required for gaze data to be within dispersion threshold?
 
     '''
-    def __init__(self,g_pool,max_dispersion = 1.0,min_duration = 0.15,h_fov=78, v_fov=50,show_fixations = False):
+    def __init__(self,g_pool,max_dispersion = 1.0,min_duration = 0.15,h_fov=78, v_fov=50,show_fixations = True):
         super(Fixation_Detector_Dispersion_Duration, self).__init__(g_pool)
         self.min_duration = min_duration
         self.max_dispersion = max_dispersion
@@ -79,7 +79,14 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
             self.max_dispersion = new_value
             self.notify_all_delayed({'subject':'fixations_should_recalculate'},delay=1.)
 
-
+        def jump_next_fixation(_):
+            ts = self.g_pool.capture.get_timestamp()
+            for f in self.fixations:
+                if f['timestamp'] > ts:
+                    self.g_pool.capture.seek_to_frame(f['mid_frame_index'])
+                    self.g_pool.new_seek = True
+                    return
+            logger.error('could not seek to next fixation.')
 
         self.menu.append(ui.Button('Close',self.close))
         self.menu.append(ui.Info_Text('This plugin detects fixations based on a dispersion threshold in terms of degrees of visual angle. It also uses a min duration threshold.'))
@@ -90,10 +97,18 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
         self.menu.append(ui.Slider('h_fov',self,min=5,step=1,max=180,label='horizontal FOV of scene camera',setter=set_h_fov))
         self.menu.append(ui.Slider('v_fov',self,min=5,step=1,max=180,label='vertical FOV of scene camera',setter=set_v_fov))
 
+        self.add_button = ui.Thumb('jump_next_fixation',setter=jump_next_fixation,getter=lambda:False,label='f',hotkey='f')
+        self.g_pool.quickbar.append(self.add_button)
+
+
     def deinit_gui(self):
         if self.menu:
             self.g_pool.gui.remove(self.menu)
             self.menu = None
+
+        if self.add_button:
+            self.g_pool.quickbar.remove(self.add_button)
+            self.add_button = None
 
     ###todo setters with delay trigger
 
@@ -131,7 +146,7 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
         sample_threshold = self.min_duration * 3 *.3 #lets assume we need data for at least 30% of the duration
         dispersion_threshold = self.max_dispersion
         duration_threshold = self.min_duration
-        self.notify_all({'subject':'fixations_changed'})
+        # self.notify_all({'subject':'fixations_changed'})
 
         def dist_deg(p1,p2):
             return np.sqrt(((p1[0]-p2[0])*self.h_fov)**2+((p1[1]-p2[1])*self.v_fov)**2)
@@ -170,11 +185,13 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
                                         'duration':duration,
                                         'dispersion':dispersion,
                                         'start_frame_index':fixation_support[0]['index'],
+                                        'mid_frame_index':fixation_support[len(fixation_support)/2]['index'],
                                         'end_frame_index':fixation_support[-1]['index'],
                                         'pix_dispersion':dispersion*self.pix_per_degree,
                                         'timestamp':fixation_support[0]['timestamp'],
                                         # 'pupil_diameter':avg_pupil_size,
-                                        'confidence':confidence}
+                                        'confidence':confidence,
+                                        'crowd_tags':''}
                         fixations.append(new_fixation)
                 if gaze_data:
                     #start a new fixation candite
@@ -192,9 +209,26 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
 
         # now lets bin fixations into frames. Fixations may be repeated this way as they span muliple frames
         fixations_by_frame = [[] for x in self.g_pool.timestamps]
+        # Mohammad - add crowd tags
+        fixations_path = os.path.join(self.g_pool.rec_dir, 'crowdpos','fixations.csv')
+        fixations_list = []
+        if os.path.isfile(fixations_path):
+            with open(fixations_path, 'rU') as csvfile:
+                all = csv.reader(csvfile, delimiter='\t')
+                first_row = True
+                for row in all:
+                    if first_row:
+                        first_row=False
+                        continue
+                    prow = {'id':row[0],'crowd_tags':row[9]}
+                    fixations_list.append(prow)
+        fix_idx = 0
         for f in fixations:
+            if fixations_list:
+                f['crowd_tags'] = fixations_list[fix_idx]['crowd_tags']
             for idx in range(f['start_frame_index'],f['end_frame_index']+1):
                 fixations_by_frame[idx].append(f)
+            fix_idx += 1
 
         self.g_pool.fixations_by_frame = fixations_by_frame
 
@@ -225,9 +259,9 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
             # csv_writer.writerow(('id','start_timestamp','duration','start_frame','end_frame','norm_pos_x','norm_pos_y','dispersion','avg_pupil_size','confidence'))
             # for f in fixations_in_section:
             #     csv_writer.writerow( ( f['id'],f['timestamp'],f['duration'],f['start_frame_index'],f['end_frame_index'],f['norm_pos'][0],f['norm_pos'][1],f['dispersion'],f['pupil_diameter'],f['confidence'] ) )
-            csv_writer.writerow(('id','start_timestamp','duration','start_frame','end_frame','norm_pos_x','norm_pos_y','dispersion','confidence'))
+            csv_writer.writerow(('id','start_timestamp','duration','start_frame','end_frame','norm_pos_x','norm_pos_y','dispersion','confidence','crowd_tags'))
             for f in fixations_in_section:
-                csv_writer.writerow( ( f['id'],f['timestamp'],f['duration'],f['start_frame_index'],f['end_frame_index'],f['norm_pos'][0],f['norm_pos'][1],f['dispersion'],f['confidence'] ) )
+                csv_writer.writerow( ( f['id'],f['timestamp'],f['duration'],f['start_frame_index'],f['end_frame_index'],f['norm_pos'][0],f['norm_pos'][1],f['dispersion'],f['confidence'],f['crowd_tags'] ) )
             logger.info("Created 'fixations.csv' file.")
 
         with open(os.path.join(export_dir,'fixation_report.csv'),'wb') as csvfile:
@@ -247,7 +281,10 @@ class Fixation_Detector_Dispersion_Duration(Fixation_Detector):
                 x = int(f['norm_pos'][0]*self.img_size[0])
                 y = int((1-f['norm_pos'][1])*self.img_size[1])
                 transparent_circle(frame.img, (x,y), radius=f['pix_dispersion'], color=(.5, .2, .6, .7), thickness=-1)
-                cv2.putText(frame.img,'%iReplaceMeWithCrowdEntries'%f['id'],(x+20,y), cv2.FONT_HERSHEY_DUPLEX,0.8,(255,50,50))
+                crowd_tags = ''
+                if 'crowd_tags' in f:
+                    crowd_tags = ' - ' + f['crowd_tags']
+                cv2.putText(frame.img,'%i%s'%(f['id'],crowd_tags),(x+20,y), cv2.FONT_HERSHEY_DUPLEX,0.8,(255,50,50))
                 # cv2.putText(frame.img,'%i - %i'%(f['start_frame_index'],f['end_frame_index']),(x,y), cv2.FONT_HERSHEY_DUPLEX,0.8,(255,150,100))
 
     def close(self):

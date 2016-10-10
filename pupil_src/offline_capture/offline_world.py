@@ -145,6 +145,8 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
     plugin_by_name = dict(zip(name_by_index,plugin_by_index))
     default_plugins = [('Recorder',{}),('Pupil_Remote',{})]
 
+    # Mohammad: Force no visual update to happen - e.g. Dont display captured frames
+    no_visual_update = True
 
     # Callback functions
     def on_resize(window,w, h):
@@ -157,7 +159,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
                 p.on_window_resize(window,w,h)
 
     def on_iconify(window,iconified):
-        g_pool.iconified = iconified
+        g_pool.iconified = iconified or no_visual_update
 
     def on_key(window, key, scancode, action, mods):
         g_pool.gui.update_key(key,scancode,action,mods)
@@ -212,7 +214,7 @@ def world(pupil_queue,timebase,launcher_pipe,eye_pipes,eyes_are_alive,user_dir,v
 
 
 
-    g_pool.iconified = False
+    g_pool.iconified = False or no_visual_update
     g_pool.capture = cap
     g_pool.pupil_confidence_threshold = session_settings.get('pupil_confidence_threshold',.6)
     g_pool.detection_mapping_mode = session_settings.get('detection_mapping_mode','2d')

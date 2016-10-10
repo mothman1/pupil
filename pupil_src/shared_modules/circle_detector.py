@@ -44,6 +44,7 @@ def find_concetric_circles(gray_img,min_ring_count=3, visual_debug=False):
             c = contours[i]
             if len(c)>5:
                 if not ellipses.has_key(i):
+                    # fitEllipse returns (x,y),(MA Major axis, ma minor axis), ellipse angle
                     e = cv2.fitEllipse(c)
                     fit = max(dist_pts_ellipse(e,c))
                     ellipses[i] = e,fit

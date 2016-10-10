@@ -1,31 +1,32 @@
-from plugin import Plugin
 import logging
 import os
 import zipfile
-import cv2
-import numpy as np
 from glob import glob
-from pyglui import ui
-from methods import  normalize, denormalize
-from file_methods import Persistent_Dict,load_object, save_object
-from video_capture import autoCreateCapture, FileCaptureError, EndofVideoFileError, CameraCaptureError
-from PIL import Image, ImageDraw
-
-from circle_detector import find_concetric_circles
 import csv
-from calibration_routines import calibration_plugins, gaze_mapping_plugins
-from plugin import Plugin_List
-from calibration_routines import finish_calibration
 from ctypes import c_double
 from multiprocessing import Value
-from requests_futures.sessions import FuturesSession
 from uuid import getnode as get_mac
 import json
 from StringIO import StringIO
 from ast import literal_eval as make_tuple
+
+import numpy as np
+from pyglui import ui
+from PIL import Image, ImageDraw
+from requests_futures.sessions import FuturesSession
+from enum import Enum
+
+from plugin import Plugin
+from methods import  normalize
+from file_methods import Persistent_Dict,load_object, save_object
+from video_capture import autoCreateCapture, EndofVideoFileError, CameraCaptureError
+from circle_detector import find_concetric_circles
+from calibration_routines import calibration_plugins, gaze_mapping_plugins
+from plugin import Plugin_List
+from calibration_routines import finish_calibration
 from recorder import Recorder
 
-from enum import Enum
+
 class Workforce(Enum):
     Internally = 0
     OnDemand = 1
@@ -305,7 +306,7 @@ class offline_eyetracking(Plugin):
             video_capture.close()
             return
 
-        from ui_roi import UIRoi
+        from player_settings.plugins.offline_crowd_process.ui_roi import UIRoi
         self.g_pool.display_mode = session_settings.get('display_mode','camera_image')
         self.g_pool.display_mode_info_text = {'camera_image': "Raw eye camera image. This uses the least amount of CPU power",
                                 'roi': "Click and drag on the blue circles to adjust the region of interest. The region should be as small as possible, but large enough to capture all pupil movements.",
@@ -416,7 +417,7 @@ class offline_eyetracking(Plugin):
         # video_capture = cv2.VideoCapture(e_video_path)
         # pos_frame = video_capture.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
 
-        from ui_roi import UIRoi
+        from player_settings.plugins.offline_crowd_process.ui_roi import UIRoi
         self.g_pool.display_mode = session_settings.get('display_mode','camera_image')
         self.g_pool.display_mode_info_text = {'camera_image': "Raw eye camera image. This uses the least amount of CPU power",
                                 'roi': "Click and drag on the blue circles to adjust the region of interest. The region should be as small as possible, but large enough to capture all pupil movements.",
@@ -697,7 +698,7 @@ class offline_eyetracking(Plugin):
             count_all_detected = 0
             for row in all:
                 norm_center = make_tuple(row[1])
-                center = (norm_center[0] * 1280, 1 - norm_center[1] * 720)
+                center = (norm_center[0] * 1280, (1 - norm_center[1]) * 720)
                 center = (int(round(center[0])),int(round(center[1])))
 
                 # calculate smoothed manhattan velocity
@@ -806,7 +807,7 @@ class offline_eyetracking(Plugin):
         return -1, None
 
     def start_processing(self):
-        data_path = '/Developments/NCLUni/pupil_crowd4Jul16/recordings/2016_07_29/003Crowd2CircleCursor'#self.rec_path
+        data_path = '/Developments/NCLUni/pupil_crowd4Jul16/recordings/2016_07_29/003Original/CrowdOldMethod'#self.rec_path
         # Set user_dir to data_path so all related plugins save to the same folder as the recordings
         self.g_pool.user_dir = data_path
         # Manage plugins
@@ -817,8 +818,8 @@ class offline_eyetracking(Plugin):
         self.g_pool.user_settings_path = os.path.join(data_path[:data_path.index('recordings')], 'capture_settings')
 
         ''' Step 1: when possible detect all pupil positions '''
-        pupil_list = self.get_pupil_list(crowd_all=True)
-        # pupil_list = self.get_pupil_list_from_csv(data_path)
+        # pupil_list = self.get_pupil_list(crowd_all=True)
+        pupil_list = self.get_pupil_list_from_csv(data_path)
         # pupil_list = []
         if pupil_list:
             # create events variable that should sent to plugins
@@ -841,8 +842,8 @@ class offline_eyetracking(Plugin):
             First iteration: send events with all pupil_list with first world frame to manual_marker_calibration plugin.update
             Following iterations: send empty [] pupil_list with next world frame to manual_marker_calibration plugin.update
             '''
-            self.calibrate(events, data_path, user_settings_world, crowd_all=True)
-            # self.calibrate_from_csv(pupil_list, data_path)
+            # self.calibrate(events, data_path, user_settings_world, crowd_all=True)
+            self.calibrate_from_csv(pupil_list, data_path)
             # self.calibrate_from_user_calibration_data_file()
 
             ''' Step 3: calculate gaze positions

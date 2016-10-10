@@ -85,6 +85,7 @@ def main():
     while True:
         #block and listen for commands from world process.
         cmd = cmd_launcher_end.recv()
+        print cmd
         if cmd == "Exit":
             break
         else:

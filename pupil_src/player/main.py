@@ -71,7 +71,7 @@ else:
     y_scroll_factor = 1.0
 
 #imports
-from file_methods import Persistent_Dict,load_object
+from file_methods import Persistent_Dict,load_object,save_object
 import numpy as np
 
 #display
@@ -185,6 +185,9 @@ def session(rec_dir):
     video_path = [f for f in glob(os.path.join(rec_dir,"world.*")) if f[-3:] in ('mp4','mkv','avi')][0]
     timestamps_path = os.path.join(rec_dir, "world_timestamps.npy")
     pupil_data_path = os.path.join(rec_dir, "pupil_data")
+    # Mohammad: set pupil_data to default dict if not found - This is necessary for offline processing
+    if not os.path.isfile(pupil_data_path):
+        save_object({'pupil_positions': [], 'gaze_positions': [] },os.path.join(rec_dir, "pupil_data"))
 
     #parse info.csv file
     meta_info_path = os.path.join(rec_dir,"info.csv")
@@ -325,8 +328,9 @@ def session(rec_dir):
 
 
     #we always load these plugins
-    system_plugins = [('Trim_Marks',{}),('Seek_Bar',{})]
-    default_plugins = [('Log_Display',{}),('Scan_Path',{}),('Vis_Polyline',{}),('Vis_Circle',{}),('Video_Export_Launcher',{})]
+    system_plugins = [('Trim_Marks',{}),('Seek_Bar',{}),('Crowdsource_Recording',{})]
+    default_plugins = [('Log_Display',{}),('Scan_Path',{}),('Vis_Polyline',{}),('Vis_Circle',{}),
+                       ('Video_Export_Launcher',{})]
     previous_plugins = session_settings.get('loaded_plugins',default_plugins)
     g_pool.notifications = []
     g_pool.delayed_notifications = {}
